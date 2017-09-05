@@ -5,8 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 handihand_ser = serial.Serial("/dev/ttyACM0", baudrate=38400)
-# glove_ser = serial.Serial("/dev/ttyACM1", baudrate=38400)
-cam = cv2.VideoCapture(1)
+glove_ser = serial.Serial("/dev/ttyACM1", baudrate=38400)
 
 filename_prefix = raw_input('Enter filename prefix (eg cone): ')
 num_trials = int(raw_input('Enter number of trials: '))
@@ -35,7 +34,6 @@ for i in range(num_trials):
             except:
                 pass
     steps = 0
-    _, img = cam.read()
     while True:
         try:
             steps += 1
@@ -44,15 +42,16 @@ for i in range(num_trials):
             #     im.set_data(img)
             #     plt.pause(0.00001)
 
-            hh_data = handihand_ser.readline().rstrip('\r\n')
-            hh_data = hh_data.split(',')
-            # gg_data = glove_ser.readline().rstrip('\r\n')
-            # gg_data = gg_data.split(',')
+            # hh_data = handihand_ser.readline().rstrip('\r\n')
+            # hh_data = hh_data.split(',')
+            gg_data = glove_ser.readline().rstrip('\r\n')
+            gg_data = gg_data.split(',')
+            print(gg_data)
             # hh_data.extend(gg_data)
-            if len(hh_data) == 16:
-                f.write(','.join(hh_data) + '\n')
+            # if len(hh_data) == 22:
+            #     f.write(','.join(hh_data) + '\n')
 
-            print(hh_data)
+            # print(hh_data)
         except KeyboardInterrupt:
             f.close()
             img_data = np.array(img_data)

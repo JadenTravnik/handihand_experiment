@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 def show_webcam(mirror=False):
     steps = 0
-    cam = cv2.VideoCapture(0)
+    cam = cv2.VideoCapture(1)
     im = plt.imshow(np.zeros((460, 640, 3)))
     while True:
     	ret_val, img = cam.read()
@@ -18,7 +18,7 @@ def show_webcam(mirror=False):
 
 
 def main():
-	show_webcam(mirror=True)
+	show_webcam()
 
 if __name__ == '__main__':
 	main()
