@@ -87,28 +87,24 @@ start_time = time.time()
 prev_time = time.time()
 times = []
 
-loops = 10
+Etas = [.005, .01, .015, .02, .025, .03, .035, .04, .045, .05]
 
 # fingers, color, fingers and color
 for signal_name_pair in Signals:
     signal_name, signals = signal_name_pair
     print('Starting ' + signal_name)
 
-    t = 0
-    traces = np.zeros(len(signals))
-    skc = SelectiveKanervaCoder(num_features, _dimensions = len(signals)*2, _eta = .025, _seed = 2)
-    GVFs = [OnPolicyGVF(lamda=0.9, alpha=0.01, numFeatures=num_features) for label in glove_labels] # 6 GVFs, one for each pot on glove
-    train_test_history_file = open(signal_name + '_train_test_history_all_signals_multiple.txt', 'w')
+    for i_eta in range(len(Etas)):
+        eta = Etas[i_eta]
+        t = 0
+        traces = np.zeros(len(signals))
+        skc = SelectiveKanervaCoder(num_features, _dimensions = len(signals)*2, _eta = eta, _seed = 2)
+        GVFs = [OnPolicyGVF(lamda=0.9, alpha=0.01, numFeatures=num_features) for label in glove_labels] # 6 GVFs, one for each pot on glove
 
-    results = []
-    for i_loop in range(loops):
+        results = []
         for filename_index in range(len(names)):
-            train_test_history_file.write(str(filename_index > num_train_files) + '\t' + names[filename_index] + '\t' + str(t) + '\n')
-            train_test_history_file.flush()
-
 
             name = names[filename_index]
-            print('\tLoading ' + name)
             data = np.load(name)
             state = normalize(data[0, :], signals)
 
@@ -151,10 +147,9 @@ for signal_name_pair in Signals:
                 if not t % 8000:
                     times.append(time.time() - prev_time)
                     prev_time = time.time()
-                    print('\t' + str(t) +\
+                    print('\t' + str(t) + '\tEta value is ' + str(eta) +\
                           '\tElapsed : ' + str(time.time() - start_time) +\
-                          '\tETA for ' + signal_name + ' : ' + str((np.mean(times)/8000.)*(850000.*(loops -i_loop) - t)))
+                          '\tETA for ' + signal_name + ' : ' + str((np.mean(times)/8000.)*(850000.*(len(Etas) - i_eta) - t)))
                 t += 1
 
-    train_test_history_file.close()
-    np.save('results_of_learning/multiple/results_of_' + signal_name + '_long_train_all_signals_multiple', np.array(results))
+        np.save('results_of_learning/eta_sweep/results_of_' + signal_name + '_all_signals_eta_' + str(eta), np.array(results))

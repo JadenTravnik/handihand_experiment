@@ -3,6 +3,21 @@ import math
 import random
 
 
+def calculate_discounted_return_backwards(value, gamma, normalize=True):
+	ret = np.zeros(value.shape[0]) 		                    # initialize the array we hold our values in
+	i = value.shape[0]-1                                    # starting at the end, heading backwards
+	while i >= 0:                                           # until we reach the start of the array
+		ret[i] += value[i]								    # add the
+		try:                                                # we surround in a try catch in case we are at the start
+			ret[i] += (ret[i+1] * gamma)                    # we add the previous return with a decay
+		except:                                        					# if there was no ret[i+1]
+			pass                                            # should only occur for first element
+		i -= 1                                              # move to the next element
+
+	cut_off = int(1./(1. - gamma))*2
+	if normalize:
+		return ret[:len(ret)-cut_off]*(1.-gamma)
+	return ret[:len(ret)-cut_off]
 
 class Verifier:
 	def __init__(self, gammaTime):
