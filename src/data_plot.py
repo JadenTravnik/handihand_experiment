@@ -23,10 +23,15 @@ def get_trial(filename_suffix, times, the_return):
     Errors = []
     T = []
     for i in range(3):
-        # sub_data = np.array([np.load('results_of_learning/results_of_' + str(i_sensor) + file_names[i] + filename_suffix + '.npy') for i_sensor in range(17,23)])
-        sub_data = np.load('results_of_learning/results_of_' + signal_names[i] + '_long_train_all_signals.npy')
+        # sub_data = np.array([np.load('results_of_learning_old/results_of_' + str(i_sensor) + file_names[i] + filename_suffix + '.npy') for i_sensor in range(17,23)])
+        sub_data = np.load('results_of_learning/long_train/results_of_' + signal_names[i] + '_long_train' + filename_suffix + '.npy')
         sub_data = np.concatenate(tuple(sub_data[:,i*2:i*2+2].reshape(1,-1,2) for i in range(sub_data.shape[1]/2)))
 
+        try:
+            assert(sub_data.shape==the_return.shape)
+        except:
+            print(sub_data.shape, the_return.shape)
+            raise
 
         sub_data[:,:,0] *= .001
         sub_error = np.sqrt((sub_data[2:6, cut_off:the_return_cut_off, 0]-the_return[2:6,cut_off:the_return_cut_off,0])**2)
@@ -102,6 +107,7 @@ def plot_all_boxes(input_type, shapes):
     nice_names = ['Color Only', 'Fingers Only', 'All']
     fig, axes = plt.subplots(figsize=(20, 14))
 
+    axes.set_ylim([0,.5])
     e = []
     colors = ['#3393C6']*4 + ['#F2A45C']*4 + ['#ABE188'] * 4
     p = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14]
@@ -177,20 +183,20 @@ names = ['Green Cyl', 'Orange Step', 'Green Step', 'Orange Cyl']
 the_return = get_return()
 
 
-for input_type in ['good_subset']: #, 'without_glove']:
+for input_type in ['', '_all_signals']: #['good_subset', 'without_glove']:
     shape, T = [], []
     for i in range(4):
         shape, T = get_trial(input_type, times[i], the_return)
-        plot_all_lines(names[i], shape)
-        filename = '../pictures/plots/' + names[i].replace(' ', '_') + '_' + input_type + '_all_signals.pdf'
-        plt.savefig(filename, dpi=100)
-        print('Saving ' + filename)
+        # plot_all_lines(names[i], shape)
+        # filename = '../pictures/plots/' + names[i].replace(' ', '_') + '_' + input_type + '_all_signals.pdf'
+        # plt.savefig(filename, dpi=100)
+        # print('Saving ' + filename)
 
     # for t, p in T:
     #     print(t,p)
 
     plot_all_boxes(input_type, shape)
-    filename = '../pictures/plots/' + input_type + '_box_all_signals.pdf'
+    filename = '../pictures/plots/' + input_type + '_box_with_lim.pdf'
     plt.savefig(filename, dpi=100)
     print('Saving ' + filename)
 

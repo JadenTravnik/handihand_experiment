@@ -88,7 +88,7 @@ prev_time = time.time()
 times = []
 
 Etas = [.005, .01, .015, .02, .025, .03, .035, .04, .045, .05]
-
+num_seeds = 5
 # fingers, color, fingers and color
 for signal_name_pair in Signals:
     signal_name, signals = signal_name_pair
@@ -96,60 +96,61 @@ for signal_name_pair in Signals:
 
     for i_eta in range(len(Etas)):
         eta = Etas[i_eta]
-        t = 0
-        traces = np.zeros(len(signals))
-        skc = SelectiveKanervaCoder(num_features, _dimensions = len(signals)*2, _eta = eta, _seed = 2)
-        GVFs = [OnPolicyGVF(lamda=0.9, alpha=0.01, numFeatures=num_features) for label in glove_labels] # 6 GVFs, one for each pot on glove
+        for i_seed in range(num_seeds):
+            t = 0
+            traces = np.zeros(len(signals))
+            skc = SelectiveKanervaCoder(num_features, _dimensions = len(signals)*2, _eta = eta, _seed = i_seed)
+            GVFs = [OnPolicyGVF(lamda=0.9, alpha=0.01, numFeatures=num_features) for label in glove_labels] # 6 GVFs, one for each pot on glove
 
-        results = []
-        for filename_index in range(len(names)):
+            results = []
+            for filename_index in range(len(names)):
 
-            name = names[filename_index]
-            data = np.load(name)
-            state = normalize(data[0, :], signals)
-
-            traces *= trace_decay
-            traces += state
-            state = state.tolist()
-            state.extend(traces*(1-trace_decay))
-            phi = skc.getFeatures(state)
-            for i in range(data.shape[0]):
-
-                state = normalize(data[i, :], signals)
-                state = state.tolist()
+                name = names[filename_index]
+                data = np.load(name)
+                state = normalize(data[0, :], signals)
 
                 traces *= trace_decay
                 traces += state
+                state = state.tolist()
                 state.extend(traces*(1-trace_decay))
+                phi = skc.getFeatures(state)
+                for i in range(data.shape[0]):
 
-                phi_next = skc.getFeatures(state)
-                Z = normalize(data[i, :], Z_indexes)
+                    state = normalize(data[i, :], signals)
+                    state = state.tolist()
 
-                preds = []
-                if filename_index > num_train_files:
-                    # Training
-                    for i_gvf in range(len(GVFs)):
-                        pred = GVFs[i_gvf].predict(phi_next)
-                        preds.append(pred)
-                        preds.append(Z[i_gvf])
-                else:
-                    # Testing
-                    for i_gvf in range(len(GVFs)):
-                        pred = GVFs[i_gvf].update(phi, phi_next, Z[i_gvf], gamma, gamma)
-                        preds.append(pred)
-                        preds.append(Z[i_gvf])
+                    traces *= trace_decay
+                    traces += state
+                    state.extend(traces*(1-trace_decay))
 
-                assert(len(preds) == 12)
-                results.append(preds)
+                    phi_next = skc.getFeatures(state)
+                    Z = normalize(data[i, :], Z_indexes)
 
-                phi = phi_next
+                    preds = []
+                    if filename_index > num_train_files:
+                        # Training
+                        for i_gvf in range(len(GVFs)):
+                            pred = GVFs[i_gvf].predict(phi_next)
+                            preds.append(pred)
+                            preds.append(Z[i_gvf])
+                    else:
+                        # Testing
+                        for i_gvf in range(len(GVFs)):
+                            pred = GVFs[i_gvf].update(phi, phi_next, Z[i_gvf], gamma, gamma)
+                            preds.append(pred)
+                            preds.append(Z[i_gvf])
 
-                if not t % 8000:
-                    times.append(time.time() - prev_time)
-                    prev_time = time.time()
-                    print('\t' + str(t) + '\tEta value is ' + str(eta) +\
-                          '\tElapsed : ' + str(time.time() - start_time) +\
-                          '\tETA for ' + signal_name + ' : ' + str((np.mean(times)/8000.)*(850000.*(len(Etas) - i_eta) - t)))
-                t += 1
+                    assert(len(preds) == 12)
+                    results.append(preds)
 
-        np.save('results_of_learning/eta_sweep/results_of_' + signal_name + '_all_signals_eta_' + str(eta), np.array(results))
+                    phi = phi_next
+
+                    if not t % 8000:
+                        times.append(time.time() - prev_time)
+                        prev_time = time.time()
+                        print('\t' + str(t) + '\tEta: ' + str(eta) +\
+                              '\tElapsed : ' + str(time.time() - start_time) +\
+                              '\tETA for ' + signal_name + ' : ' + str((np.mean(times)/8000.)*(850000.*(len(Etas) - i_eta)*(num_seeds - i_seed) - t)))
+                    t += 1
+
+            np.save('results_of_learning/eta_sweep/results_of_' + signal_name + '_all_signals_eta_' + str(eta) + '_' + str(i_seed), np.array(results))
