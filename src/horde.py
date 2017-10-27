@@ -65,7 +65,7 @@ class OnPolicyGVF:
 
 	def __init__(self, gamma_id=0, phi_id = 0, lamda=0.99, alpha=0.1, numFeatures=10, numActiveFeatures=1, id=0, doRupee=False, doUde=False):
 		self.gamma_id = gamma_id
-		self.alpha = alpha
+		self.alpha = alpha/float(numActiveFeatures)
 		self.lamda = lamda
 		self.id = id
 		self.phi_id = phi_id
